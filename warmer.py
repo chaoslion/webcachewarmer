@@ -6,17 +6,18 @@ from urlparse import urlparse
 from os.path import split
 import time
 
-if __name__ == "__main__":
-
-    url = "http://alexanderjaehnel.de/sitemap.xml"
-
-    print "starting to warm the cache..."
-    r = requests.get(url)
-    data = r.text
-    soup = BeautifulSoup(data, "html5lib")
+def warmUpURL(url):
+        print "warmup: {}".format(url.text)
+        r = requests.get(url.text)
+        if r.status_code != 200:
+            print "error {} @ {}".format(r.status_code, url.text)
+        else:
+            print "warmup took: {} s".format(r.elapsed.total_seconds())
+      
+def warmUpBlog(locations):
+    # filter blog posts
     blogposts = list()
-
-    for url in soup.findAll("loc"):
+    for url in locations:
         url_parsed = urlparse(url.text)
         paths = split(url_parsed.path)
         if paths[0] != "/blog":
@@ -25,14 +26,30 @@ if __name__ == "__main__":
 
     blogpostlen = len(blogposts)
     print "found {} blog posts!".format(blogpostlen)
-    index = 1
     for post in blogposts:  
-        print "warming up: {}, {} % done".format(post.text, float(index)/blogpostlen)
-        tstart = time.clock()
-        r = requests.get(post.text)
-        if r.status_code != 200:
-            print "error{} while warming: {}".format(r.status_code, post.text)
-            break
-        print "took {} s".format(time.clock()-tstart)
-        index += 1
+        warmUpURL(post)
+
+def warmUpAll(locations):
+    for url in locations:
+        warmUpURL(url)
+
+def main():
+    if len(sys.argv) != 2:
+        print "expected a xml sitemap url!"
+        return
+
+    # eg: "http://alexanderjaehnel.de/sitemap.xml"
+
+    print "starting to warm the cache..."
+    r = requests.get(sys.argv[1])
+    data = r.text
+    soup = BeautifulSoup(data, "html5lib")
+
+    urls = soup.findAll("loc")
+    print "found {} pages".format(len(urls))
+    # warmUpBlog(urls)
+    warmUpAll(urls)
+
+if __name__ == "__main__":
+    main()
 
