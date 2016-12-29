@@ -36,9 +36,8 @@ def warmUpAll(locations):
 def main():
     if len(sys.argv) != 2:
         print "expected a xml sitemap url!"
+	print "like: http://website/sitemap.xml"
         return
-
-    # eg: "http://alexanderjaehnel.de/sitemap.xml"
 
     print "starting to warm the cache..."
     r = requests.get(sys.argv[1])
